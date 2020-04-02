@@ -2,6 +2,7 @@ package com.lagou.edu.factory;
 
 import com.lagou.edu.annotations.Autowired;
 import com.lagou.edu.annotations.Component;
+import com.lagou.edu.annotations.Transactional;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -18,7 +19,7 @@ import java.net.URLDecoder;
 import java.util.*;
 
 /**
- * @author 应癫
+ * @author 应癫 宫晨
  *
  * 工厂类，生产对象（使用反射技术）
  */
@@ -31,6 +32,7 @@ public class BeanFactoryAnnotation {
 
     private static Map<String, Object> map = new HashMap<>();  // 存储对象
     private static Map<String, String> componentId = new HashMap<>();  // 存储component类名和id的对应关系
+    private static String packageName = null;
 
     static {
         // 任务一：读取解析xml，获取扫描的包，拿到所有@component的类，最后通过反射技术实例化对象并且存储待用（map集合）
@@ -48,9 +50,9 @@ public class BeanFactoryAnnotation {
 
             for (int i = 0; i < beanList.size(); i++) {
                 Element element = beanList.get(i);
-                String packageName = element.attributeValue("base-package");
+                packageName = element.attributeValue("base-package");
                 //该方法可以获得指定包下添加了指定注解的所有类
-                components = BeanFactoryAnnotation.getClass4Annotation(packageName, Component.class);
+                components = getClass4Annotation(packageName, Component.class);
                 //遍历所有component，先装进map
                 for (Class clazz : components) {
                     // 通过反射技术实例化对象
@@ -88,8 +90,8 @@ public class BeanFactoryAnnotation {
                             for (Class aClass : components) {
                                 //如果是同一接口，且不是自己
                                 if (field.getType().isAssignableFrom(aClass) && !field.getType().equals(aClass)) {
-                                    name = field.getType().getSimpleName();
-                                    className = aClass.getName();
+                                    name = field.getType().getSimpleName();//接口的类型
+                                    className = aClass.getName();//实现类的全类名
                                     break;
                                 }
                             }
@@ -124,8 +126,30 @@ public class BeanFactoryAnnotation {
 
     }
 
-    // 任务二：对外提供获取实例对象的接口（根据id获取）
+    // 任务二：对外提供获取实例对象的方法（根据id获取）
     public static Object getBean(String id) {
+        Object res;//最终的返回值
+        Object obj = map.get(id);
+        //判断是否实现了@Transactional注解
+        if (obj.getClass().isAnnotationPresent(Transactional.class)) {
+            //如果实现了，就需要调用代理工厂
+            ProxyFactory proxyFactory = (ProxyFactory) map.get("proxyFactory");
+            //再判断被代理类是否实现了接口,通过扫描配置文件包下所有类逐个比较
+            List<Class> allClass = getAllClass(packageName);
+            for (Class aClass : allClass) {
+                if (aClass.isAssignableFrom(obj.getClass()) && !obj.getClass().equals(aClass)) {
+                    //接口.isAssignableFrom(实现类)
+                    //如果实现了某接口
+                    // 则采用jdk动态代理
+                    res = proxyFactory.getJdkProxy(obj);
+                    return res;
+                }
+            }
+            //否则返回CGlib动态代理
+            res = proxyFactory.getCglibProxy(obj);
+            return res;
+        }
+        //没有实现@Transactional注解直接返回
         return map.get(id);
     }
 
@@ -133,7 +157,7 @@ public class BeanFactoryAnnotation {
      * 扫描指定包路径下所有包含指定注解的类
      * @param packageName 包名
      * @param apiClass 指定的注解
-     * @return Set
+     * @return List
      * */
     public static List<Class> getClass4Annotation(String packageName, Class<?> apiClass) {
         List<Class> classList = new ArrayList<>();
@@ -168,6 +192,53 @@ public class BeanFactoryAnnotation {
                             if (null != clazz.getAnnotation(apiClass)) {
                                 classList.add(clazz);
                             }
+                        }
+                    }
+                }
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        // System.err.println(JsonUtil.toString(classSet));
+        return classList;
+    }
+
+    /**
+     * 扫描指定包路径下所有类
+     * @param packageName 包名
+     * @return List
+     * */
+    public static List<Class> getAllClass(String packageName) {
+        List<Class> classList = new ArrayList<>();
+        // 是否循环迭代
+        boolean recursive = true;
+        // 获取包的名字 并进行替换
+        String packageDirName = packageName.replace('.', '/');
+        // 定义一个枚举的集合 并进行循环来处理这个目录下的things
+        Enumeration<URL> dirs;
+        try {
+            dirs = Thread.currentThread().getContextClassLoader().getResources(packageDirName);
+            // 循环迭代下去
+            while (dirs.hasMoreElements()) {
+                // 获取下一个元素
+                URL url = dirs.nextElement();
+                // 得到协议的名称
+                String protocol = url.getProtocol();
+                // 如果是以文件的形式保存在服务器上
+                if ("file".equals(protocol)) {
+                    // 获取包的物理路径
+                    String filePath = URLDecoder.decode(url.getFile(), "UTF-8");
+                    // 以文件的方式扫描整个包下的文件 并添加到集合中
+                    File dir = new File(filePath);
+                    List<File> fileList = new ArrayList<File>();
+                    fetchFileList(dir, fileList);
+                    for (File f : fileList) {
+                        String fileName = f.getAbsolutePath();
+                        if (fileName.endsWith(".class")) {
+                            String noSuffixFileName = fileName.substring(8 + fileName.lastIndexOf("classes"), fileName.indexOf(".class"));
+                            String filePackage = noSuffixFileName.replaceAll("\\\\", ".");
+                            Class clazz = Class.forName(filePackage);
+                            classList.add(clazz);
                         }
                     }
                 }

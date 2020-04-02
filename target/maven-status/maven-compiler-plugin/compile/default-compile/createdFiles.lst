@@ -10,7 +10,9 @@ com\lagou\edu\factory\ProxyFactory$1.class
 com\lagou\edu\utils\ConnectionUtils.class
 com\lagou\edu\service\impl\TransferServiceImpl.class
 com\lagou\edu\utils\TransactionManager.class
+com\lagou\edu\annotations\Transactional.class
 com\lagou\edu\utils\JsonUtils.class
+com\lagou\edu\service\impl\TransferServiceCGlib.class
 com\lagou\edu\annotations\Autowired.class
 com\lagou\edu\pojo\Result.class
 com\lagou\edu\dao\AccountDao.class

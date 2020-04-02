@@ -5,18 +5,13 @@ import com.lagou.edu.annotations.Component;
 import com.lagou.edu.annotations.Transactional;
 import com.lagou.edu.dao.AccountDao;
 import com.lagou.edu.pojo.Account;
-import com.lagou.edu.service.TransferService;
 
 /**
  * @author 应癫
  */
-@Component(value = "transferService")
+@Component(value = "transferServiceCGlib")
 @Transactional
-public class TransferServiceImpl implements TransferService {
-
-    //private AccountDao accountDao = new JdbcAccountDaoImpl();
-
-    // private AccountDao accountDao = (AccountDao) BeanFactory.getBean("accountDao");
+public class TransferServiceCGlib {
 
     // 最佳状态
     @Autowired
@@ -30,7 +25,6 @@ public class TransferServiceImpl implements TransferService {
 
 
 
-    @Override
     public void transfer(String fromCardNo, String toCardNo, int money) throws Exception {
 
         /*try{
