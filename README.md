@@ -55,3 +55,6 @@ INSERT INTO `account` VALUES ('李大雷', 10000,'6029621011000');
 INSERT INTO `account` VALUES ('韩梅梅', 10000,'6029621011001');
 ```
 
+## 循环依赖
+
+[见图片](https://github.com/gcgo/lagou-transfer/blob/master/%E5%BE%AA%E7%8E%AF%E4%BE%9D%E8%B5%96.jpg)
