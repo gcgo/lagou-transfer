@@ -16,11 +16,13 @@
 
     <!--事务管理器-->
     <bean id="transactionManager" class="com.lagou.edu.utils.TransactionManager">
-        <property name="ConnectionUtils" ref="connectionUtils"/>
+        <property name="ConnectionUtils" ref="connectionUtils" />
     </bean>
 
     <!--代理对象工厂-->
     <bean id="proxyFactory" class="com.lagou.edu.factory.ProxyFactory">
-        <property name="TransactionManager" ref="transactionManager"/>
+        <property name="TransactionManager" ref="transactionManager" />
     </bean>
+
+    <component-scan base-package="test" />
 </beans>
