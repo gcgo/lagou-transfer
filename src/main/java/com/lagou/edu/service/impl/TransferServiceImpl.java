@@ -1,5 +1,7 @@
 package com.lagou.edu.service.impl;
 
+import com.lagou.edu.annotations.Autowired;
+import com.lagou.edu.annotations.Component;
 import com.lagou.edu.dao.AccountDao;
 import com.lagou.edu.pojo.Account;
 import com.lagou.edu.service.TransferService;
@@ -7,6 +9,7 @@ import com.lagou.edu.service.TransferService;
 /**
  * @author 应癫
  */
+@Component(value = "transferService")
 public class TransferServiceImpl implements TransferService {
 
     //private AccountDao accountDao = new JdbcAccountDaoImpl();
@@ -14,6 +17,7 @@ public class TransferServiceImpl implements TransferService {
     // private AccountDao accountDao = (AccountDao) BeanFactory.getBean("accountDao");
 
     // 最佳状态
+    @Autowired
     private AccountDao accountDao;
 
     // 构造函数传值/set方法传值

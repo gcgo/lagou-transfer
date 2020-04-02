@@ -1,11 +1,14 @@
 package com.lagou.edu.utils;
 
+import com.lagou.edu.annotations.Component;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
  * @author 应癫
  */
+@Component(value = "connectionUtils")
 public class ConnectionUtils {
 
     /*private ConnectionUtils() {
@@ -36,6 +39,5 @@ public class ConnectionUtils {
             threadLocal.set(connection);
         }
         return connection;
-
     }
 }
